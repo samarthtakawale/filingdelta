@@ -1,0 +1,74 @@
+[
+  {
+    "id": "acme-10k-risk-factors",
+    "old": [
+      "We depend on a limited number of suppliers for key components, and any disruption could harm our business.",
+      "Our revenue was $1.0 billion in 2022, and we may not sustain this growth rate.",
+      "We are subject to intense competition in all of our markets.",
+      "We may be subject to intellectual property claims that could be costly to defend."
+    ],
+    "new": [
+      "We depend on a limited number of suppliers for key components, and any disruption could harm our business.",
+      "Our revenue was $1.2 billion in 2023 compared to $1.0 billion in 2022, and we may not sustain this growth rate.",
+      "We are subject to intense competition across all of our markets.",
+      "Our auditors have expressed substantial doubt about our ability to continue as a going concern.",
+      "We are a defendant in a purported class action lawsuit alleging securities law violations.",
+      "Our research and development expense was $450 million in 2023."
+    ],
+    "facts": {
+      "Revenues|2023": 1234000000,
+      "Revenues|2022": 1004000000,
+      "ResearchAndDevelopmentExpense|2023": 520000000
+    },
+    "gold_changes": [
+      {"contains": "limited number of suppliers", "label": "unchanged"},
+      {"contains": "revenue was $1.2 billion", "label": "numbers_changed"},
+      {"contains": "intense competition", "label": "cosmetic"},
+      {"contains": "going concern", "label": "going_concern"},
+      {"contains": "class action", "label": "litigation"},
+      {"contains": "intellectual property", "label": "removed_disclosure"},
+      {"contains": "research and development", "label": "new_disclosure"}
+    ],
+    "gold_claims": [
+      {"metric": "revenue", "year": 2023, "status": "verified"},
+      {"metric": "revenue", "year": 2022, "status": "verified"},
+      {"metric": "research and development", "year": 2023, "status": "contradicted"}
+    ]
+  },
+  {
+    "id": "stable-filing-wording-only",
+    "old": [
+      "Our business is subject to seasonal fluctuations.",
+      "We rely on third-party logistics providers to deliver products.",
+      "Changes in tax laws could affect our results."
+    ],
+    "new": [
+      "Our business is subject to seasonal fluctuations.",
+      "We rely on third-party logistics providers to deliver our products.",
+      "Changes in tax laws could adversely affect our results."
+    ],
+    "facts": {},
+    "gold_changes": [
+      {"contains": "seasonal", "label": "unchanged"},
+      {"contains": "logistics providers", "label": "cosmetic"},
+      {"contains": "tax laws", "label": "cosmetic"}
+    ],
+    "gold_claims": []
+  },
+  {
+    "id": "restatement-with-cash-claim",
+    "old": [
+      "Our cash and cash equivalents were $2.5 billion in 2022 and we believe this is sufficient to fund operations."
+    ],
+    "new": [
+      "Our cash and cash equivalents were $2.7 billion in 2023 and we believe this is sufficient to fund operations, and we restated our 2021 financial statements to correct errors."
+    ],
+    "facts": {"CashAndCashEquivalentsAtCarryingValue|2023": 2680000000},
+    "gold_changes": [
+      {"contains": "restated", "label": "restatement"}
+    ],
+    "gold_claims": [
+      {"metric": "cash and cash equivalents", "year": 2023, "status": "verified"}
+    ]
+  }
+]

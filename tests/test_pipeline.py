@@ -82,3 +82,10 @@ def test_contradicted_claim_pauses_for_review_then_resumes():
 def test_eval_gate_passes_on_baseline_and_fails_on_a_broken_classifier():
     assert main() == 0
     assert evaluate(CASES, classifier=lambda c: "cosmetic")["material_recall"] == 0
+
+
+def test_year_bump_alone_is_cosmetic_but_a_new_figure_is_not():
+    from filingdelta.analyze import classify
+    c = {"kind": "modified", "old": "Sales fell in fiscal 2024.", "new": "Sales fell in fiscal 2025.", "sim": 0.9, "label": ""}
+    assert classify(c) == "cosmetic"
+    assert classify({**c, "new": "Sales fell 5% in fiscal 2025."}) == "numbers_changed"

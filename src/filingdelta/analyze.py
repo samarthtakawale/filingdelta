@@ -22,6 +22,12 @@ YEAR = re.compile(r"\b(20\d{2})\b")
 SCALE = {"": 1, "thousand": 1e3, "million": 1e6, "billion": 1e9}
 
 
+def numbers(text: str) -> set[str]:
+    """Figures in the text, minus bare years: 'fiscal 2024' -> 'fiscal 2025' is not a material edit.
+    shortcut: a real figure that looks like a year (e.g. '2024 units') is ignored too."""
+    return {n for n in NUM.findall(text) if not YEAR.fullmatch(n)}
+
+
 def classify(c: dict) -> str:
     """shortcut: regex baseline that ignores negation ('no material weakness').
     Swap in a distilled Hugging Face text classifier with the same signature; the eval harness scores either."""
@@ -33,7 +39,7 @@ def classify(c: dict) -> str:
         return fresh[0]
     if c["kind"] == "added":
         return "new_disclosure"
-    return "numbers_changed" if set(NUM.findall(c["new"])) != set(NUM.findall(c["old"])) else "cosmetic"
+    return "numbers_changed" if numbers(c["new"]) != numbers(c["old"]) else "cosmetic"
 
 
 def claims(text: str) -> list[dict]:

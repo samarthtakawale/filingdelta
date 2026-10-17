@@ -1,6 +1,7 @@
 """python -m filingdelta.export 320193 789019 ...
 Writes changes.csv: every change found between each company's latest two 10-Ks, ready to label in Excel."""
 import csv
+import difflib
 import os
 import sys
 
@@ -8,7 +9,20 @@ from .analyze import classify
 from .diff import diff, paragraphs, risk_factors
 from .edgar import Edgar
 
-COLS = ["cik", "old_accession", "new_accession", "kind", "sim", "predicted_label", "old_text", "new_text", "your_label", "notes"]
+COLS = ["cik", "old_accession", "new_accession", "kind", "sim", "predicted_label", "what_changed", "old_text", "new_text", "your_label", "notes"]
+
+
+def what_changed(old: str, new: str) -> str:
+    """Only the edited words, with a few words of context before each: '...sales [may -> will]'."""
+    a, b = old.split(), new.split()
+    out = []
+    for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if op == "equal":
+            continue
+        gone, came = " ".join(a[i1:i2]), " ".join(b[j1:j2])
+        change = f"[{gone} -> {came}]" if gone and came else f"[+ {came}]" if came else f"[- {gone}]"
+        out.append(f"...{' '.join(a[max(0, i1 - 4):i1])} {change}")
+    return " | ".join(out)
 
 
 def rows(ed, cik: int):
@@ -18,7 +32,8 @@ def rows(ed, cik: int):
     if min(len(o), len(n)) < 5:  # almost certainly a parser miss, not a real filing
         raise ValueError(f"Item 1A not found properly ({len(o)} and {len(n)} paragraphs)")
     for c in diff(o, n):
-        yield [cik, old["accession"], new["accession"], c["kind"], c["sim"], classify(c), c["old"], c["new"], "", ""]
+        yield [cik, old["accession"], new["accession"], c["kind"], c["sim"], classify(c),
+               what_changed(c["old"], c["new"]) if c["kind"] == "modified" else "", c["old"], c["new"], "", ""]
 
 
 if __name__ == "__main__":

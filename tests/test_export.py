@@ -1,4 +1,4 @@
-from filingdelta.export import rows
+from filingdelta.export import rows, what_changed
 
 
 class FakeEdgar:
@@ -16,3 +16,7 @@ class FakeEdgar:
 def test_export_rows_flag_the_new_paragraph():
     out = list(rows(FakeEdgar(), 1))
     assert len(out) == 1 and out[0][3] == "added" and out[0][5] == "litigation"
+
+
+def test_what_changed_shows_only_the_edit():
+    assert what_changed("sales may fall in the third quarter", "sales will fall in the third quarter") == "...sales [may -> will]"

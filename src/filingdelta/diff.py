@@ -12,14 +12,28 @@ def paragraphs(html: str) -> list[str]:
     return [t for t in (" ".join(b.get_text(" ").split()) for b in leaves) if t]
 
 
+PAGE_NOISE = re.compile(r"\d+|item\s*\d+[a-c]?(?:,\s*\d+[a-c]?)*\.?", re.I)  # page numbers and running page headers
+
+
 def risk_factors(paras: list[str]) -> list[str]:
-    """Item 1A body. The table of contents also says 'Item 1A', so take the longest span."""
+    """Item 1A body. The table of contents also says 'Item 1A', so take the longest span.
+    Handles Microsoft-style quirks: heading split across table cells, letters split by stray spaces
+    ('RIS K FACTORS'), and page numbers / 'Item 1A' running headers inside the section."""
+    squash = lambda t: re.sub(r"\s+", "", t).lower()
     best: list[str] = []
     for s, p in enumerate(paras):
-        if re.match(r"item\s*1a\.?\s*[-—:]?\s*risk factors", p, re.I):
-            end = next((j for j in range(s + 1, len(paras)) if re.match(r"item\s*(1b|1c|2)\b", paras[j], re.I)), len(paras))
-            if end - s - 1 > len(best):
-                best = paras[s + 1:end]
+        m = re.match(r"item1a\.?[-—:]?(riskfactors)?", squash(p))
+        if not m:
+            continue
+        body = s + 1
+        if m.group(1) is None:  # heading split across cells: 'Item 1A.' then 'Risk Factors'
+            if not (s + 1 < len(paras) and squash(paras[s + 1]).startswith("riskfactors")):
+                continue
+            body = s + 2
+        end = next((j for j in range(body, len(paras)) if re.match(r"item\s*(1b|1c|2)\b", paras[j], re.I)), len(paras))
+        section = [t for t in paras[body:end] if not PAGE_NOISE.fullmatch(t)]
+        if len(section) > len(best):
+            best = section
     return best
 
 

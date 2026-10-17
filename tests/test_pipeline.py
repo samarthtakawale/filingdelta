@@ -89,3 +89,16 @@ def test_year_bump_alone_is_cosmetic_but_a_new_figure_is_not():
     c = {"kind": "modified", "old": "Sales fell in fiscal 2024.", "new": "Sales fell in fiscal 2025.", "sim": 0.9, "label": ""}
     assert classify(c) == "cosmetic"
     assert classify({**c, "new": "Sales fell 5% in fiscal 2025."}) == "numbers_changed"
+
+
+def test_risk_factors_handles_heading_split_across_table_cells():
+    cell = lambda a, b: f"<table><tr><td><p>{a}</p></td><td><p>{b}</p></td></tr></table>"
+    html = (cell("Item 1A.", "RISK FACTORS") + cell("Item 1B.", "UNRESOLVED STAFF COMMENTS")
+            + cell("Item 1A.", "RISK FACTORS") + "<p>Risk one.</p><p>Risk two.</p>" + cell("Item 1B.", "UNRESOLVED STAFF COMMENTS"))
+    assert risk_factors(paragraphs(html)) == ["Risk one.", "Risk two."]
+
+def test_risk_factors_handles_broken_heading_and_page_noise():
+    html = ("<p>Item 1A.</p><p>Risk Factors</p><p>14</p><p>Item 1B.</p><p>Unresolved Staff Comments</p>"
+            "<p>ITEM 1A. RIS K FACTORS</p><p>Risk one.</p><p>Item 1A</p><p>15</p><p>Risk two.</p>"
+            "<p>Item 1B, 1C</p><p>ITEM 1B. UNRESOLVE D STAFF COMMENTS</p>")
+    assert risk_factors(paragraphs(html)) == ["Risk one.", "Risk two."]

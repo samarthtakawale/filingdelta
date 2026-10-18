@@ -39,7 +39,7 @@ def classify(c: dict) -> str:
         return fresh[0]
     if c["kind"] == "added":
         return "new_disclosure"
-    return "numbers_changed" if numbers(c["new"]) != numbers(c["old"]) else "cosmetic"
+    return "numbers_changed" if numbers(c["new"]) - numbers(c["old"]) else "cosmetic"
 
 
 def claims(text: str) -> list[dict]:

@@ -15,6 +15,18 @@ def paragraphs(html: str) -> list[str]:
 PAGE_NOISE = re.compile(r"\d+|item\s*\d+[a-c]?(?:,\s*\d+[a-c]?)*\.?", re.I)  # page numbers and running page headers
 
 
+def _glue_page_breaks(paras: list[str]) -> list[str]:
+    """A paragraph cut by a page break leaves a lowercase fragment; glue it onto the unfinished paragraph before it.
+    shortcut: a page break that falls exactly between two sentences is not detected."""
+    out: list[str] = []
+    for t in paras:
+        if out and t[0].islower() and not re.search(r"[.!?:;)\"”’]$", out[-1]):
+            out[-1] += " " + t
+        else:
+            out.append(t)
+    return out
+
+
 def risk_factors(paras: list[str]) -> list[str]:
     """Item 1A body. The table of contents also says 'Item 1A', so take the longest span.
     Handles Microsoft-style quirks: heading split across table cells, letters split by stray spaces
@@ -31,7 +43,7 @@ def risk_factors(paras: list[str]) -> list[str]:
                 continue
             body = s + 2
         end = next((j for j in range(body, len(paras)) if re.match(r"item\s*(1b|1c|2)\b", paras[j], re.I)), len(paras))
-        section = [t for t in paras[body:end] if not PAGE_NOISE.fullmatch(t)]
+        section = _glue_page_breaks([t for t in paras[body:end] if not PAGE_NOISE.fullmatch(t)])
         if len(section) > len(best):
             best = section
     return best
@@ -55,7 +67,7 @@ def _change(kind: str, old: str = "", new: str = "", sim: float = 0.0) -> dict:
     return {"kind": kind, "old": old, "new": new, "sim": round(sim, 3), "label": ""}
 
 
-def diff(old: list[str], new: list[str], embed=hash_embed, thr: float = 0.5) -> list[dict]:
+def diff(old: list[str], new: list[str], embed=hash_embed, thr: float = 0.7) -> list[dict]:
     """Exact matches are unchanged and dropped. The rest are paired greedily by similarity:
     paired = modified, unpaired new = added, unpaired old = removed.
     shortcut: all-pairs over the unmatched paragraphs only; use an ANN index past ~2k paragraphs."""

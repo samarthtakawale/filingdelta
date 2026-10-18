@@ -37,8 +37,8 @@ def test_risk_factors_skips_table_of_contents():
 
 def test_diff_pairs_edits_and_flags_adds_and_removes():
     kinds = {c["kind"] for c in diff(
-        ["Our revenue was $1.0 billion in 2022.", "Old risk about tariffs."],
-        ["Our revenue was $1.2 billion in 2023.", "A brand new going concern warning."])}
+        ["Our revenue was $1.0 billion in 2022, and we may not sustain this growth rate given competition and supply limits.", "Old risk about tariffs."],
+        ["Our revenue was $1.2 billion in 2023, and we may not sustain this growth rate given competition and supply limits.", "A brand new going concern warning."])}
     assert kinds == {"modified", "added", "removed"}
 
 
@@ -97,8 +97,22 @@ def test_risk_factors_handles_heading_split_across_table_cells():
             + cell("Item 1A.", "RISK FACTORS") + "<p>Risk one.</p><p>Risk two.</p>" + cell("Item 1B.", "UNRESOLVED STAFF COMMENTS"))
     assert risk_factors(paragraphs(html)) == ["Risk one.", "Risk two."]
 
+
 def test_risk_factors_handles_broken_heading_and_page_noise():
     html = ("<p>Item 1A.</p><p>Risk Factors</p><p>14</p><p>Item 1B.</p><p>Unresolved Staff Comments</p>"
             "<p>ITEM 1A. RIS K FACTORS</p><p>Risk one.</p><p>Item 1A</p><p>15</p><p>Risk two.</p>"
             "<p>Item 1B, 1C</p><p>ITEM 1B. UNRESOLVE D STAFF COMMENTS</p>")
     assert risk_factors(paragraphs(html)) == ["Risk one.", "Risk two."]
+
+
+def test_risk_factors_glues_paragraphs_split_by_a_page_break():
+    html = ("<p>ITEM 1A. RISK FACTORS</p><p>We may be harmed when software updates are</p><p>Item 1A</p><p>15</p>"
+            "<p>not deployed in time. We also face other risks.</p><p>iPhone sales may vary.</p><p>ITEM 1B. UNRESOLVED</p>")
+    assert risk_factors(paragraphs(html)) == [
+        "We may be harmed when software updates are not deployed in time. We also face other risks.", "iPhone sales may vary."]
+
+
+def test_a_removed_number_alone_is_not_a_numeric_change():
+    from filingdelta.analyze import classify
+    c = {"kind": "modified", "old": "A pandemic, such as COVID-19, could hurt us.", "new": "A pandemic could hurt us.", "sim": 0.9, "label": ""}
+    assert classify(c) == "cosmetic"

@@ -12,7 +12,7 @@ def paragraphs(html: str) -> list[str]:
     return [t for t in (" ".join(b.get_text(" ").split()) for b in leaves) if t]
 
 
-PAGE_NOISE = re.compile(r"\d+|item\s*\d+[a-c]?(?:,\s*\d+[a-c]?)*\.?", re.I)  # page numbers and running page headers
+PAGE_NOISE = re.compile(r"\d+|part\s+[ivx]+\.?|item\s*\d+[a-c]?(?:,\s*\d+[a-c]?)*\.?", re.I)  # page numbers and running page headers
 
 
 def _glue_page_breaks(paras: list[str]) -> list[str]:
